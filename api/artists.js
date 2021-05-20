@@ -54,12 +54,13 @@ artistsRouter.post('/', validateArtist, (req, res, next) => {
         $dateOfBirth: req.dateOfBirth,
         $biography: req.biography,
         $isCurrentlyEmployed: req.isCurrentlyEmployed
-    }, (err) => {
+    }, function(err) {
+        //for some reason writing the function this way instead of the arrow function makes is work.
         if (err) {
             next(err);
         } else {
             db.get(`SELECT * FROM Artist WHERE Artist.id = ${this.lastID}`, (err, artist) => {
-              res.status(201).json({artist: artist});
+            res.status(201).json({artist: artist});
             })
         }
     })

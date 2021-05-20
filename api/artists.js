@@ -6,9 +6,9 @@ const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite'
 
 
 artistsRouter.param('artistId', (req, res, next, artistId) => {
-    const sql = 'SELECT * FROM Artist WHERE Artist.id = $artistId';
-    const values = {$artistId: artistId}
-    db.get(sql, values, (err, artist) => {
+    db.get('SELECT * FROM Artist WHERE Artist.id = $artistId', {
+        $artistId: artistId
+    }, (err, artist) => {
         if (err) {
             next(err);
         } else if (artist) {
@@ -72,7 +72,21 @@ artistsRouter.put('/:artistId', validateArtist, (req, res, next) => {
         } else {
             db.get(`SELECT * FROM Artist WHERE Artist.id = ${req.params.artistId}`, (err, artist) => {
                 res.status(200).json({artist: artist});
-              })  
+            })  
+        }
+    })
+})
+
+artistsRouter.delete('/:artistId', (req, res, next) => {
+    db.run(`UPDATE Artist SET is_currently_employed = 0 WHERE Artist.id = $artistId`, {
+        $artistId: req.params.artistId
+    }, (err) => {
+        if (err) {
+            next(err);
+        } else {
+            db.get(`SELECT * FROM Artist WHERE Artist.id = ${req.params.artistId}`, (err, artist) => {
+                res.status(200).json({artist: artist});
+            })
         }
     })
 })

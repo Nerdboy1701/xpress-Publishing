@@ -60,7 +60,7 @@ artistsRouter.post('/', validateArtist, (req, res, next) => {
             next(err);
         } else {
             db.get(`SELECT * FROM Artist WHERE Artist.id = ${this.lastID}`, (err, artist) => {
-            res.status(201).json({artist: artist});
+                res.status(201).json({artist: artist});
             })
         }
     })

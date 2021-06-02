@@ -23,7 +23,7 @@ const validateIssue = (req, res, next) => {
     req.artistId = req.body.issue.artistId;
 
     db.get(`SELECT * FROM Artist WHERE Artist.id = $artistid`, {
-        $artistId: artistId
+        $artistId: req.artistId
     }, (err, artist) => {
         if (err) {
             next(err);

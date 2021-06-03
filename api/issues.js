@@ -4,6 +4,20 @@ const issuesRouter = express.Router({mergeParams: true});
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
+issueRouter.param('issueId', (req, res, next, issueId) => {
+    db.get(`SELECT * FROM Issue WHERE Issue.id= $issueId`, {
+        $issueId: issueId
+    }, (err, issue) => {
+        if (err) {
+            next(err);
+        } else if (issue) {
+            req.issue = issue;
+        } else {
+            res.sendStatus(404);
+        }
+    })
+});
+
 issuesRouter.get('/', (req, res, next) => {
     db.all(`SELECT * FROM Issue WHERE Issue.series_id = $seriesId`, {
         $seriesId: req.params.seriesId

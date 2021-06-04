@@ -29,7 +29,7 @@ issuesRouter.get('/', (req, res, next) => {
         }
     })
 })
-//name, issueNumber, publicationDate, or artistId
+
 const validateIssue = (req, res, next) => {
     req.name = req.body.issue.name;
     req.issueNumber = req.body.issue.issueNumber;
@@ -64,6 +64,18 @@ issuesRouter.post('/', validateIssue, (req, res, next) => {
         } else {
             db.get(`SELECT * FROM Issue WHERE Issue.id = ${this.lastID}`, (err, issue) => {
                 res.status(201).json({issue: issue})
+            })
+        }
+    })
+})
+
+issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
+    db.run(`UPDATE Issue SET name = "${req.name}", issue_number = "${req.issueNumber}, publication_date = "${req.publicationDate}",  artist_id = ${req.artistId}, series_id = ${req.params.seriesId} WHERE Issue.id = ${req.params.issueId}`, (err) => {
+        if (err) {
+            next(err);
+        } else {
+            db.get(`SELECT * FROM Issue WHERE Issue.id = ${req.params.issueId}`, (err, issue) => {
+                res.status(200).json({issue: issue});
             })
         }
     })

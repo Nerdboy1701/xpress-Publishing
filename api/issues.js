@@ -5,7 +5,7 @@ const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
 issueRouter.param('issueId', (req, res, next, issueId) => {
-    db.get(`SELECT * FROM Issue WHERE Issue.id= $issueId`, {
+    db.get(`SELECT * FROM Issue WHERE Issue.id = $issueId`, {
         $issueId: issueId
     }, (err, issue) => {
         if (err) {
@@ -36,7 +36,7 @@ const validateIssue = (req, res, next) => {
     req.publicationDate = req.body.issue.publicationDate;
     req.artistId = req.body.issue.artistId;
 
-    db.get(`SELECT * FROM Artist WHERE Artist.id = $artistid`, {
+    db.get(`SELECT * FROM Artist WHERE Artist.id = $artistId`, {
         $artistId: req.artistId
     }, (err, artist) => {
         if (err) {
@@ -70,7 +70,7 @@ issuesRouter.post('/', validateIssue, (req, res, next) => {
 })
 
 issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
-    db.run(`UPDATE Issue SET name = "${req.name}", issue_number = "${req.issueNumber}, publication_date = "${req.publicationDate}",  artist_id = ${req.artistId}, series_id = ${req.params.seriesId} WHERE Issue.id = ${req.params.issueId}`, (err) => {
+    db.run(`UPDATE Issue SET name = "${req.name}", issue_number = "${req.issueNumber}", publication_date = "${req.publicationDate}",  artist_id = "${req.artistId}", series_id = ${req.params.seriesId} WHERE Issue.id = ${req.params.issueId}`, (err) => {
         if (err) {
             next(err);
         } else {
@@ -79,6 +79,18 @@ issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
             })
         }
     })
+})
+
+issueRouter.delete('/:issueId', (req, res, next) => {
+    db.run(`DELETE FROM Issue WHERE Issue.id = $issueId`), {
+        $issueId: req.params.issueId
+    }, (err) => {
+        if (err) {
+            next(err);
+        } else {
+            res.status(204);
+        }
+    }
 })
 
 module.exports = issuesRouter;

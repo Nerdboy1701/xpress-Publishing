@@ -82,7 +82,7 @@ issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
 })
 
 issueRouter.delete('/:issueId', (req, res, next) => {
-    db.run(`DELETE FROM Issue WHERE Issue.id = $issueId`), {
+    db.run(`DELETE FROM Issue WHERE Issue.id = $issueId`, {
         $issueId: req.params.issueId
     }, (err) => {
         if (err) {
@@ -90,7 +90,7 @@ issueRouter.delete('/:issueId', (req, res, next) => {
         } else {
             res.status(204);
         }
-    }
+    })
 })
 
 module.exports = issuesRouter;

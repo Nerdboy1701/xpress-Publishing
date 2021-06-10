@@ -4,14 +4,14 @@ const issuesRouter = express.Router({mergeParams: true});
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
 
-issueRouter.param('issueId', (req, res, next, issueId) => {
+issuesRouter.param('issueId', (req, res, next, issueId) => {
     db.get(`SELECT * FROM Issue WHERE Issue.id = $issueId`, {
         $issueId: issueId
     }, (err, issue) => {
         if (err) {
             next(err);
         } else if (issue) {
-            req.issue = issue;
+            next();
         } else {
             res.sendStatus(404);
         }
@@ -52,7 +52,7 @@ const validateIssue = (req, res, next) => {
 }
 
 issuesRouter.post('/', validateIssue, (req, res, next) => {
-    db.run(`INSERT INTO Issue (name, issue_number, publication_date, series_id) VALUES ($name, $issueNumber, $publicationDate, $artistId, $series_id)`, {
+    db.run(`INSERT INTO Issue (name, issue_number, publication_date, artist_id, series_id) VALUES ($name, $issueNumber, $publicationDate, $artistId, $seriesId)`, {
         $name: req.name,
         $issueNumber: req.issueNumber,
         $publicationDate: req.publicationDate,
@@ -60,7 +60,7 @@ issuesRouter.post('/', validateIssue, (req, res, next) => {
         $seriesId: req.params.seriesId
     }, function(err) {
         if (err) {
-            next();
+            next(err);
         } else {
             db.get(`SELECT * FROM Issue WHERE Issue.id = ${this.lastID}`, (err, issue) => {
                 res.status(201).json({issue: issue})
@@ -70,7 +70,13 @@ issuesRouter.post('/', validateIssue, (req, res, next) => {
 })
 
 issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
-    db.run(`UPDATE Issue SET name = "${req.name}", issue_number = "${req.issueNumber}", publication_date = "${req.publicationDate}",  artist_id = "${req.artistId}", series_id = ${req.params.seriesId} WHERE Issue.id = ${req.params.issueId}`, (err) => {
+    db.run(`UPDATE Issue SET name = $name, issue_number = $issueNumber, publication_date = $publicationDate,  artist_id = $artistId WHERE Issue.id = $issueId`, {
+        $name: req.name,
+        $issueNumber: req.issueNumber,
+        $publicationDate: req.publicationDate,
+        $artistId: req.artistId,
+        $issueId: req.params.issueId
+    }, (err) => {
         if (err) {
             next(err);
         } else {
@@ -81,14 +87,14 @@ issuesRouter.put('/:issueId', validateIssue, (req, res, next) => {
     })
 })
 
-issueRouter.delete('/:issueId', (req, res, next) => {
+issuesRouter.delete('/:issueId', (req, res, next) => {
     db.run(`DELETE FROM Issue WHERE Issue.id = $issueId`, {
         $issueId: req.params.issueId
     }, (err) => {
         if (err) {
             next(err);
         } else {
-            res.status(204);
+            res.sendStatus(204);
         }
     })
 })

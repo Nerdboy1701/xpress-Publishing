@@ -53,7 +53,7 @@ seriesRouter.post('/', validateSeries, (req, res, next) => {
         $description: req.description
     }, function(err) {
         if (err) {
-            next();
+            next(err);
         } else {
             db.get(`SELECT * FROM Series WHERE Series.id = ${this.lastID}`, (err, series) => {
                 res.status(201).json({series: series})
@@ -62,7 +62,7 @@ seriesRouter.post('/', validateSeries, (req, res, next) => {
     })
 })
 
-seriesRouter.put('/:seriesId', validateSeries, (req, res, next) =>{
+seriesRouter.put('/:seriesId', validateSeries, (req, res, next) => {
     db.run(`UPDATE Series SET name = "${req.name}", description = "${req.description}" WHERE Series.id = ${req.params.seriesId}`, (err) => {
         if (err) {
             next(err);
@@ -75,13 +75,23 @@ seriesRouter.put('/:seriesId', validateSeries, (req, res, next) =>{
 })
 
 seriesRouter.delete('/:seriesId', (req, res, next) => {
-    db.run(`DELETE FROM Series WHERE Series.id = $seriesId`, {
-       $seriesId: req.params.seriesId 
-    }, (err) => {
+     db.get(`SELECT * FROM Issue WHERE Issue.series_id = $seriesId`, {
+        $seriesId: req.params.seriesId
+    }, (err, issue) => {
         if (err) {
+            next(err);
+        } else if (issue) {
             return res.sendStatus(400);
         } else {
-            res.status(204);
+            db.run(`DELETE FROM Series WHERE Series.id = $seriesId`, {
+                $seriesId: req.params.seriesId 
+            }, (err) => {
+                if (err) {
+                    next(err);
+                } else {
+                    res.sendStatus(204);
+                }
+            })
         }
     })
 })

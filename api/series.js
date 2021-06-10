@@ -1,5 +1,6 @@
 const express = require('express');
 const seriesRouter = express.Router();
+const issuesRouter = require('./issues');
 
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.TEST_DATABASE || './database.sqlite');
@@ -18,6 +19,8 @@ seriesRouter.param('seriesId', (req, res, next, seriesId) => {
         }
     })
 })
+
+seriesRouter.use('/:seriesId/issues', issuesRouter);
 
 seriesRouter.get('/', (req, res, next) => {
     db.all(`SELECT * FROM Series`, (err, series) => {
@@ -50,7 +53,7 @@ seriesRouter.post('/', validateSeries, (req, res, next) => {
         $description: req.description
     }, function(err) {
         if (err) {
-            next();
+            next(err);
         } else {
             db.get(`SELECT * FROM Series WHERE Series.id = ${this.lastID}`, (err, series) => {
                 res.status(201).json({series: series})
@@ -59,13 +62,35 @@ seriesRouter.post('/', validateSeries, (req, res, next) => {
     })
 })
 
-seriesRouter.put('/:seriesId', validateSeries, (req, res, next) =>{
+seriesRouter.put('/:seriesId', validateSeries, (req, res, next) => {
     db.run(`UPDATE Series SET name = "${req.name}", description = "${req.description}" WHERE Series.id = ${req.params.seriesId}`, (err) => {
         if (err) {
             next(err);
         } else {
             db.get(`SELECT * FROM Series WHERE Series.id = ${req.params.seriesId}`, (err, series) => {
                 res.status(200).json({series: series});
+            })
+        }
+    })
+})
+
+seriesRouter.delete('/:seriesId', (req, res, next) => {
+     db.get(`SELECT * FROM Issue WHERE Issue.series_id = $seriesId`, {
+        $seriesId: req.params.seriesId
+    }, (err, issue) => {
+        if (err) {
+            next(err);
+        } else if (issue) {
+            return res.sendStatus(400);
+        } else {
+            db.run(`DELETE FROM Series WHERE Series.id = $seriesId`, {
+                $seriesId: req.params.seriesId 
+            }, (err) => {
+                if (err) {
+                    next(err);
+                } else {
+                    res.sendStatus(204);
+                }
             })
         }
     })
